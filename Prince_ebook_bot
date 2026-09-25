@@ -1,0 +1,81 @@
+import logging
+import os
+from telegram import Update
+from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
+
+# Activer les logs pour suivre le fonctionnement du bot
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+
+# 1. Commande /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    nom_utilisateur = update.message.from_user.first_name
+    message_accueil = (
+        f"👋 Bonjour *{nom_utilisateur}* et bienvenue sur **Don création Art** (@Prince_ebook_bot) !\n\n"
+        "Je suis votre assistant virtuel automatisé. Voici ce que je peux faire pour vous :\n"
+        "• /catalogue - Voir nos produits et services\n"
+        "• /aide - Obtenir de l'assistance\n\n"
+        "N'hésitez pas à m'écrire directement si vous avez une question !"
+    )
+    await update.message.reply_text(message_accueil, parse_mode='Markdown')
+
+# 2. Commande /catalogue
+async def catalogue(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    texte_catalogue = (
+        "📚 **Catalogue de Don création Art** :\n\n"
+        "1️⃣ **E-books & Formations** - Guides numériques exclusifs.\n"
+        "2️⃣ **Créations Graphiques** - Visuels personnalisés et designs.\n"
+        "3️⃣ **Services sur mesure** - Contactez-nous pour vos projets.\n\n"
+        "Pour commander ou en savoir plus sur un article, envoyez-nous un message décrivant votre besoin !"
+    )
+    await update.message.reply_text(texte_catalogue, parse_mode='Markdown')
+
+# 3. Commande /aide
+async def aide(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    texte_aide = (
+        "🛠️ **Centre d'aide**\n\n"
+        "Si vous rencontrez un problème ou avez une question spécifique, "
+        "laissez un message ici et un administrateur vous répondra dans les plus brefs délais."
+    )
+    await update.message.reply_text(texte_aide, parse_mode='Markdown')
+
+# 4. Réponse automatique pour tous les autres messages
+async def reponse_automatique(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    texte_recu = update.message.text
+    nom_utilisateur = update.message.from_user.first_name
+    
+    reponse = (
+        f"Merci pour votre message, *{nom_utilisateur}* !\n\n"
+        f"Nous avons bien reçu votre demande : *\"{texte_recu}\"*.\n"
+        "Un responsable de **Don création Art** va traiter cela rapidement. Restez à l'écoute !"
+    )
+    await update.message.reply_text(reponse, parse_mode='Markdown')
+
+def main():
+    # Récupération sécurisée du Token depuis Render
+    TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+    
+    if not TOKEN:
+        print("Erè: Token Telegram la pa jwenn nan anviwònman an!")
+        return
+
+    # Création de l'application
+    application = ApplicationBuilder().token(TOKEN).build()
+
+    # Enregistrement des gestionnaires (Handlers)
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("catalogue", catalogue))
+    application.add_handler(CommandHandler("aide", aide))
+    
+    # Gestionnaire pour les messages texte classiques (hors commandes)
+    application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), reponse_automatique))
+
+    print("Le bot Don création Art est en marche...")
+    
+    # Lancement du bot en arrière-plan
+    application.run_polling()
+
+if __name__ == '__main__':
+    main()
